@@ -2,6 +2,7 @@
 <project version="4">
   <component name="SqlDialectMappings">
     <file url="file://$PROJECT_DIR$/Laboratoare/Laborator0-1/Probleme.sql" dialect="Oracle" />
-    <file url="file://$PROJECT_DIR$/Laboratoare/Laborator2/IntroducerePL/SQL.sql" dialect="Oracle" />
+    <file url="file://$PROJECT_DIR$/Laboratoare/Laborator2/IntroducereInPLSQL.sql" dialect="Oracle" />
+    <file url="file://$PROJECT_DIR$/Laboratoare/Laborator3/TipuriDeDate.sql" dialect="Oracle" />
   </component>
 </project>
