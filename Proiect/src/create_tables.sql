@@ -1,143 +1,195 @@
--- superentitatea 1. PERSOANA
-CREATE TABLE PERSOANA (
-    id_persoana NUMBER GENERATED ALWAYS AS IDENTITY,
+--1) VENIT
+CREATE TABLE VENIT (
+    id_venit NUMBER GENERATED ALWAYS AS IDENTITY,
+    nume_venit VARCHAR2(100) NOT NULL,
+    sursa_venit VARCHAR2(100),
+
+    CONSTRAINT pk_venit PRIMARY KEY (id_venit)
+);
+
+--2) CLIENT
+CREATE TABLE CLIENT (
+    id_client NUMBER GENERATED ALWAYS AS IDENTITY,
     nume VARCHAR2(50) NOT NULL,
     prenume VARCHAR2(50) NOT NULL,
-    data_nastere DATE NOT NULL,
     adresa VARCHAR2(200),
     telefon VARCHAR2(20),
     email VARCHAR2(100),
     CNP VARCHAR2(13) UNIQUE NOT NULL,
-    CONSTRAINT pk_persoana PRIMARY KEY (id_persoana)
+    venit_lunar NUMBER(10,2),
+    status_financiar VARCHAR2(50),
+    status_angajare VARCHAR2(50),
+    grad_indatorare NUMBER(5,2),
+
+    CONSTRAINT pk_client PRIMARY KEY (id_client)
 );
 
--- subentitati
-    -- 1.1 CLIENT
-        CREATE TABLE CLIENT (
-            id_persoana NUMBER PRIMARY KEY,
-            venit_lunar NUMBER(10,2) NOT NULL,
-            status_financiar VARCHAR2(50) NOT NULL,
-            status_angajare VARCHAR2(50) NOT NULL,
-            grad_indatorare NUMBER(5,2) NOT NULL,
-            CONSTRAINT fk_client_persoana FOREIGN KEY (id_persoana) REFERENCES PERSOANA(id_persoana) ON DELETE CASCADE
-        );
+--3) ANALIST
+CREATE TABLE ANALIST (
+    id_analist NUMBER GENERATED ALWAYS AS IDENTITY,
+    nume VARCHAR2(50) NOT NULL,
+    prenume VARCHAR2(50) NOT NULL,
+    adresa VARCHAR2(200),
+    telefon VARCHAR2(20),
+    email VARCHAR2(100),
+    CNP VARCHAR2(13),
+    departament VARCHAR2(50),
+    suma_maxima NUMBER(12,2),
 
-    -- 1.2 ANALIST
-        CREATE TABLE ANALIST(
-            id_persoana NUMBER PRIMARY KEY,
-            departament VARCHAR2(50) NOT NULL,
-            suma_maxima NUMBER(12,2) NOT NULL,
-            CONSTRAINT fk_analist_persoana FOREIGN KEY (id_persoana) REFERENCES PERSOANA(id_persoana) ON DELETE CASCADE
-        );
+    CONSTRAINT pk_analist PRIMARY KEY (id_analist)
+);
 
-    -- 1.3 GARANT
-        CREATE TABLE GARANT(
-            id_persoana NUMBER PRIMARY KEY,
-            venit_garant NUMBER(10,2) NOT NULL,
-            relatie_client VARCHAR2(50),
-            CONSTRAINT fk_garant_persoana FOREIGN KEY (id_persoana) REFERENCES PERSOANA(id_persoana) ON DELETE CASCADE
-        );
+--4) ACHIZITIE
+CREATE TABLE ACHIZITIE (
+    id_achizitie NUMBER GENERATED ALWAYS AS IDENTITY,
+    tip_achizitie VARCHAR2(50),
+    procent_finantat NUMBER(5,2),
+    suma_avans NUMBER(12,2),
+    valoare_piata NUMBER(12,2),
+    valoare_evaluare NUMBER(12,2),
+    data_evaluare DATE,
+    descriere VARCHAR2(255),
 
--- 2. VENIT_CLIENT
+    CONSTRAINT pk_achizitie PRIMARY KEY (id_achizitie)
+);
+
+--5) VENIT_CLIENT
 CREATE TABLE VENIT_CLIENT (
-    id_venit NUMBER GENERATED ALWAYS AS IDENTITY,
-    id_persoana NUMBER NOT NULL,
+    id_venit_client NUMBER GENERATED ALWAYS AS IDENTITY,
+    id_client NUMBER NOT NULL,
+    id_venit NUMBER NOT NULL,
     suma_lunara NUMBER(10,2) NOT NULL,
-    tip_venit VARCHAR2(50) NOT NULL,
-    sursa_venit VARCHAR2(100),
     contract_venit VARCHAR2(50),
-    CONSTRAINT pk_venit_client PRIMARY KEY (id_venit),
-    CONSTRAINT fk_vc_persoana FOREIGN KEY (id_persoana) REFERENCES CLIENT(id_persoana)  ON DELETE CASCADE
+
+    CONSTRAINT pk_venit_client PRIMARY KEY (id_venit_client),
+
+    CONSTRAINT fk_vc_client FOREIGN KEY (id_client)
+    REFERENCES CLIENT(id_client)
+    ON DELETE CASCADE,
+
+    CONSTRAINT fk_vc_venit FOREIGN KEY (id_venit)
+    REFERENCES VENIT(id_venit)
+    ON DELETE CASCADE,
+
+    CONSTRAINT uq_client_venit UNIQUE (id_client, id_venit)
 );
 
--- 3. CREDIT
-CREATE TABLE CREDIT(
+--6) GARANT
+CREATE TABLE GARANT (
+    id_garant NUMBER GENERATED ALWAYS AS IDENTITY,
+    id_client NUMBER NOT NULL,
+    nume VARCHAR2(50),
+    prenume VARCHAR2(50),
+    adresa VARCHAR2(200),
+    telefon VARCHAR2(20),
+    email VARCHAR2(100),
+    CNP VARCHAR2(13),
+    relatie_client VARCHAR2(50),
+    venit_garant NUMBER(10,2),
+
+    CONSTRAINT pk_garant PRIMARY KEY (id_garant),
+
+    CONSTRAINT fk_garant_client FOREIGN KEY (id_client)
+    REFERENCES CLIENT(id_client)
+    ON DELETE CASCADE
+);
+
+--7) CREDIT
+CREATE TABLE CREDIT (
     id_credit NUMBER GENERATED ALWAYS AS IDENTITY,
-    id_persoana NUMBER NOT NULL,
+    id_client NUMBER NOT NULL,
     tip_credit VARCHAR2(50) NOT NULL,
     suma_solicitata NUMBER(12,2),
-    suma_acordata NUMBER(12,2) NOT NULL,
-    data_aplicarii DATE NOT NULL,
-    data_acordare DATE NOT NULL,
-    numar_rate NUMBER(3),
+    suma_aprobata NUMBER(12,2),
+    data_aplicarii DATE DEFAULT SYSDATE NOT NULL,
+    data_acordarii DATE,
+    numar_rate NUMBER(3) NOT NULL CHECK (numar_rate >= 1),
+
     CONSTRAINT pk_credit PRIMARY KEY (id_credit),
-    CONSTRAINT fk_credit_persoana FOREIGN KEY (id_persoana) REFERENCES CLIENT(id_persoana) ON DELETE CASCADE,
-    CONSTRAINT chk_date_credit CHECK (data_aplicarii <= data_acordare)
-    --de adaugat constragneri gen data_aplicare <= data acordare
+
+    CONSTRAINT fk_credit_client FOREIGN KEY (id_client)
+    REFERENCES CLIENT(id_client)
+    ON DELETE CASCADE
 );
 
--- 4. RATA
-CREATE TABLE RATA(
+--8) EVALUARE
+CREATE TABLE EVALUARE (
+    id_evaluare NUMBER GENERATED ALWAYS AS IDENTITY,
+    id_credit NUMBER NOT NULL,
+    id_analist NUMBER NOT NULL,
+    id_achizitie NUMBER NOT NULL,
+    data_evaluarii DATE DEFAULT SYSDATE NOT NULL,
+    tip_evaluare VARCHAR2(50),
+    scor_risc NUMBER(5,2),
+    clasa_risc VARCHAR2(10),
+    decizie VARCHAR2(50) NOT NULL,
+    comentarii VARCHAR2(400),
+
+    CONSTRAINT pk_evaluare PRIMARY KEY (id_evaluare),
+
+    CONSTRAINT fk_eval_credit FOREIGN KEY (id_credit)
+    REFERENCES CREDIT(id_credit)
+    ON DELETE CASCADE,
+
+    CONSTRAINT fk_eval_analist FOREIGN KEY (id_analist)
+    REFERENCES ANALIST(id_analist)
+    ON DELETE CASCADE,
+
+    CONSTRAINT fk_eval_achizitie FOREIGN KEY (id_achizitie)
+    REFERENCES ACHIZITIE(id_achizitie)
+    ON DELETE CASCADE
+);
+
+--9) RATA
+CREATE TABLE RATA (
     id_rata NUMBER GENERATED ALWAYS AS IDENTITY,
     id_credit NUMBER NOT NULL,
     numar_rata NUMBER(3) NOT NULL,
     data_scadenta DATE NOT NULL,
-    indice_referinta VARCHAR2(50) NOT NULL,
-    marja NUMBER(5,2), --sau un float de verificat?
+    indice_referinta VARCHAR2(50),
+    marja NUMBER(5,2),
     suma_rata NUMBER(12,2) NOT NULL,
     suma_dobanda NUMBER(12,2),
     status_rata VARCHAR2(20),
-    penalizari NUMBER(12,2),
+    penalizari NUMBER(12,2) DEFAULT 0,
+
     CONSTRAINT pk_rata PRIMARY KEY (id_rata),
-    CONSTRAINT fk_rata_credit FOREIGN KEY (id_credit) REFERENCES CREDIT(id_credit) ON DELETE CASCADE
+
+    CONSTRAINT fk_rata_credit FOREIGN KEY (id_credit)
+    REFERENCES CREDIT(id_credit)
+    ON DELETE CASCADE,
+
+    CONSTRAINT uq_credit_rata UNIQUE (id_credit, numar_rata)
 );
 
--- 5. PLATA
-CREATE TABLE PLATA(
+--10) PLATA
+CREATE TABLE PLATA (
     id_plata NUMBER GENERATED ALWAYS AS IDENTITY,
     id_rata NUMBER NOT NULL,
-    data_plata DATE,
+    data_plata DATE DEFAULT SYSDATE,
     suma_platita NUMBER(12,2) NOT NULL,
-    metoda_plata VARCHAR2(20),
+    metoda_plata VARCHAR2(50),
+
     CONSTRAINT pk_plata PRIMARY KEY (id_plata),
-    CONSTRAINT fk_plata_rata FOREIGN KEY (id_rata) REFERENCES RATA(id_rata) ON DELETE CASCADE
 
+    CONSTRAINT fk_plata_rata FOREIGN KEY (id_rata)
+    REFERENCES RATA(id_rata)
+    ON DELETE CASCADE
 );
 
--- 6. ACHIZITE
-CREATE TABLE ACHIZITIE(
-    id_achizitie NUMBER GENERATED ALWAYS AS IDENTITY,
-    tip_achizitie VARCHAR2(20),
-    procent_finantat NUMBER(5,2) NOT NULL, --trb un float un procent gen
-    suma_avans NUMBER(12,2) NOT NULL,
-    CONSTRAINT pk_achizitie PRIMARY KEY (id_achizitie)
-);
-
--- 7. GARANTIE
-CREATE TABLE GARANTIE(
-    id_garantie NUMBER GENERATED ALWAYS AS IDENTITY,
-    valoare_piata NUMBER(12,2),
-    valoare_evaluare NUMBER(12,2) NOT NULL,
-    data_evaluare DATE,
-    descriere VARCHAR2(200),
-    CONSTRAINT pk_garantie PRIMARY KEY (id_garantie)
-);
-
--- 8. ACOPERIRE
-CREATE TABLE ACOPERIRE(
-    id_acoperire NUMBER GENERATED ALWAYS AS IDENTITY,
-    id_garantie NUMBER NOT NULL,
-    id_credit NUMBER NOT NULL,
-    procent_acoperire NUMBER(5,2), --imi trb un float subunitar gen
-    CONSTRAINT pk_acoperire PRIMARY KEY (id_acoperire),
-    CONSTRAINT fk_acoperire_garantie FOREIGN KEY (id_garantie) REFERENCES GARANTIE(id_garantie) ON DELETE CASCADE,
-    CONSTRAINT fk_acoperire_credit FOREIGN KEY (id_credit) REFERENCES CREDIT(id_credit) ON DELETE CASCADE
-);
-
--- 9. Relatia Ternara EVALUARE
-CREATE TABLE EVALUARE (
-    id_evaluare      NUMBER GENERATED ALWAYS AS IDENTITY,
-    id_credit        NUMBER NOT NULL,
-    id_analist       NUMBER NOT NULL,
-    id_achizitie     NUMBER NOT NULL,
-    data_evaluarii   DATE NOT NULL,
-    tip_evaluare     VARCHAR2(50),
-    scor_risc        NUMBER(5,2) NOT NULL,
-    clasa_risc       VARCHAR2(20),
-    decizie          VARCHAR2(20) NOT NULL,
-    comentarii       VARCHAR2(400),
-    CONSTRAINT pk_evaluare PRIMARY KEY (id_evaluare),
-    CONSTRAINT fk_eval_credit FOREIGN KEY (id_credit) REFERENCES CREDIT(id_credit) ON DELETE CASCADE,
-    CONSTRAINT fk_eval_analist FOREIGN KEY (id_analist) REFERENCES ANALIST(id_persoana) ON DELETE SET NULL,
-    CONSTRAINT fk_eval_achizitie FOREIGN KEY (id_achizitie) REFERENCES ACHIZITIE(id_achizitie) ON DELETE CASCADE
-);
+CREATE OR REPLACE TRIGGER trg_creare_rate
+AFTER INSERT ON CREDIT
+FOR EACH ROW
+BEGIN
+    FOR i IN 1 .. :NEW.numar_rate LOOP
+        INSERT INTO RATA ( id_credit, numar_rata, data_scadenta, suma_rata, status_rata, penalizari) VALUES (
+            :NEW.id_credit,
+            i,
+            ADD_MONTHS(:NEW.data_acordarii, i),
+            (:NEW.suma_aprobata / :NEW.numar_rate),
+            'NEPLATITA',
+            0
+        );
+    END LOOP;
+END;
+/
