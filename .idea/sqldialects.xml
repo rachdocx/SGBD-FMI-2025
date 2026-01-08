@@ -13,6 +13,8 @@
     <file url="file://$PROJECT_DIR$/Laboratoare/Laborator9/Lab9.sql" dialect="Oracle" />
     <file url="file://$PROJECT_DIR$/Proiect/src/10-Trigger-LMD.sql" dialect="Oracle" />
     <file url="file://$PROJECT_DIR$/Proiect/src/11-Trigger-LMD-LaNivelDeLinie.sql" dialect="Oracle" />
+    <file url="file://$PROJECT_DIR$/Proiect/src/12-Trigger-LDD.sql" dialect="Oracle" />
+    <file url="file://$PROJECT_DIR$/Proiect/src/13-pachete.sql" dialect="Oracle" />
     <file url="file://$PROJECT_DIR$/Proiect/src/6-subprogram_stocat_independent.sql" dialect="Oracle" />
     <file url="file://$PROJECT_DIR$/Proiect/src/7-sub_stocat_independent_cursoare.sql" dialect="Oracle" />
     <file url="file://$PROJECT_DIR$/Proiect/src/8-NDF_TMR_sub_stocat_independent.sql" dialect="Oracle" />
