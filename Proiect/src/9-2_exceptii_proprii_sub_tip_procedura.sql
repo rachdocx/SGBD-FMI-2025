@@ -9,14 +9,18 @@ CREATE OR REPLACE PROCEDURE validare_credit (p_id_client CLIENT.id_client%TYPE, 
     credit_neaprobat EXCEPTION;
     grad_prea_mare EXCEPTION;
 BEGIN
+
+    --am schimbat logica query-ului, initial era gresita
     SELECT SUM(vc.suma_lunara), c.grad_indatorare, e.decizie, cr.SUMA_SOLICITATA
     INTO v_venit_total, v_grad_indatorare, v_decizie, v_suma_credit
-    FROM client c
-    JOIN venit_client vc ON c.id_client = vc.id_client
-    JOIN venit v ON vc.id_venit = v.id_venit
-    JOIN credit cr ON cr.id_client = c.id_client
-    JOIN evaluare e ON e.id_credit = cr.id_credit
-    WHERE c.id_client = p_id_client AND cr.id_credit = p_id_credit
+    FROM CLIENT c
+    JOIN VENIT_CLIENT vc ON c.id_client = vc.id_client
+    JOIN VENIT v ON vc.id_venit = v.id_venit
+    JOIN CREDIT cr ON cr.id_client = c.id_client
+    JOIN EVALUARE e ON e.id_credit = cr.id_credit
+    WHERE c.id_client = p_id_client AND cr.id_credit = p_id_credit AND e.id_evaluare = (SELECT MAX(id_evaluare)
+                                                                                        FROM EVALUARE
+                                                                                        WHERE id_credit = p_id_credit)
     GROUP BY c.grad_indatorare, e.decizie, cr.SUMA_SOLICITATA;
 
     v_venit_minim := v_suma_credit * 0.05;
